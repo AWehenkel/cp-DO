@@ -71,8 +71,9 @@ def main(n=8):
     # Create the solver.
     solver = pywrapcp.Solver("paper")
     #Chargement des donnees
-    path = "/Users/antoinewehenkel/PycharmProjects/cp/P2_instances/instance_3/"
+    path = "/Users/antoinewehenkel/PycharmProjects/cp/P2_instances/instance_4/"
     demand = pd.read_csv(path + "P2_demand.csv", header=None, delimiter=",").values.tolist()
+    demand_bis = pd.read_csv(path + "P2_demand.csv", header=None, delimiter=",").values.tolist()
     nb_paper = len(demand)
     time_horizon = len(demand[0])
     elec_price = pd.read_csv(path + "P2_electricity_prices.csv", header=None, delimiter=",").values.flatten().tolist()
@@ -83,7 +84,9 @@ def main(n=8):
 
     flatten_command = flattenCommandBook(demand)
     lower_bounds = getLowerBounds(flatten_command)
+    print(lower_bounds)
     upper_bounds = getUpperBounds(lower_bounds)
+    print(upper_bounds)
     print(energy_cons)
 
     for i in range(time_horizon):
@@ -117,10 +120,26 @@ def main(n=8):
     [solver.Add(solver.Sum([x[t][i] for i in range(nb_paper)]) <= 1) for t in range(time_horizon)]
 
     # Constraints on command
+    print()
+    nb_dead = 0
+    add_cons = False
     for t in range(time_horizon):
         for p in range(nb_paper):
-            solver.Add(solver.Sum([x[t_tot][p] for t_tot in range(t + 1)]) <= upper_bounds[p][t])
-            solver.Add(solver.Sum([x[t_tot][p] for t_tot in range(t + 1)]) >= lower_bounds[p][t])
+            if demand_bis[p][t] != 0:
+                for p1 in range(nb_paper):
+                    add_cons = True
+                    nb_dead += 1
+                    print("%d\t%d" % (lower_bounds[p1][t], upper_bounds[p1][t]))
+                    if(lower_bounds[p1][t] > upper_bounds[p1][t]):
+                        print("ERROR")
+                        exit()
+                    solver.Add(solver.Sum([x[t_tot][p1] for t_tot in range(t + 1)]) <= upper_bounds[p1][t])
+                    solver.Add(solver.Sum([x[t_tot][p1] for t_tot in range(t + 1)]) >= lower_bounds[p1][t])
+                break
+        if(add_cons):
+            print()
+        add_cons = False
+    print("nb_dead %d" % nb_dead)
 
     # Constraints on minimal production time
     for p in range(nb_paper):
