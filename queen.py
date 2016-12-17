@@ -71,7 +71,7 @@ def main(n=8):
     # Create the solver.
     solver = pywrapcp.Solver("paper")
     #Chargement des donnees
-    path = "/Users/antoinewehenkel/PycharmProjects/cp/P2_instances/instance_4/"
+    path = "/Users/antoinewehenkel/PycharmProjects/cp/P2_instances/instance_3/"
     demand = pd.read_csv(path + "P2_demand.csv", header=None, delimiter=",").values.tolist()
     demand_bis = pd.read_csv(path + "P2_demand.csv", header=None, delimiter=",").values.tolist()
     nb_paper = len(demand)
@@ -143,8 +143,8 @@ def main(n=8):
 
     # Constraints on minimal production time
     for p in range(nb_paper):
-        for t in range(time_horizon):
-            for to in range(min_time_prod[p]):
+        for t in range(1, time_horizon):
+            for to in range(1, min_time_prod[p]):
                 if t + to <= time_horizon:
                     solver.Add(x[t + to][p] >= x[t][p] - x[t - 1][p])
 
